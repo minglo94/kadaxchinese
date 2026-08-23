@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "範文十二式",
+      "hasCanvas": true,
+      "bodyTextLen": 607,
+      "bodyTextHash": "f04d4b74e94d85de144f43b0c5aa267e57451e5f718f0fdcff5c5a6c8f108c88",
+      "bodyTextPrefix": "範文十二式水墨版 總覽 趣味闖關 深度測驗 默書練習 學習進度 HKDSE 中文科指定範文 十二篇範文 宣紙上的溫習書齋 完整原",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "範文十二式",
+      "hasCanvas": true,
+      "bodyTextLen": 578,
+      "bodyTextHash": "a8e740afbc019c44205a398615b618707838d3306c59f82d201f771a157fa903",
+      "bodyTextPrefix": "範文十二式水墨版 HKDSE 中文科指定範文 十二篇範文 宣紙上的溫習書齋 完整原文、必考詞解、閃卡與仿真測驗、名句默書。現加趣",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

@@ -1,0 +1,1 @@
+import{o as e}from"./useStore-CP8wJgJA.js";import{j as t}from"./index-LtdamHOm.js";var n=e();function r(){return(0,n.jsx)(t,{})}export{r as component};
