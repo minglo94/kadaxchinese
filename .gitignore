@@ -1,5 +1,16 @@
 node_modules/
+
 # TanStack Start dev cache
 .tanstack/
-# Nitro build output for non-default presets (see NITRO_PRESET in vite.config.ts)
+
+# Nitro build output. NEVER commit these: Vercel treats a committed
+# .vercel/output as a ready-made Build Output API artifact and can deploy it
+# instead of building, which silently ships a stale site (that is exactly how
+# /login started 404-ing while / kept working).
+.vercel/
 .zeabur/
+
+# Local env pulled with `vercel env pull` — contains the database password
+.env
+.env.*
+!.env.example
