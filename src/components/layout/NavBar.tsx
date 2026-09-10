@@ -15,7 +15,7 @@ import {
 import { AuthSlot } from "@/components/auth/AuthSlot";
 import { useProfile } from "@/components/auth/use-profile";
 import { Button } from "@/components/ui/button";
-import { roleHome, type Role } from "@/lib/classroom/types";
+import { ROLE_HOME_LABELS, roleHome } from "@/lib/classroom/types";
 import type { SyncStatus } from "@/lib/progress-sync";
 import { cn } from "@/lib/utils";
 
@@ -25,12 +25,6 @@ const links = [
   { to: "/quiz", label: "深度測驗" },
   { to: "/dictation", label: "默書練習" },
 ] as const;
-
-const HOME_LABEL: Record<Role, string> = {
-  teacher: "我的班房",
-  student: "我的進度",
-  admin: "全校總覽",
-};
 
 const SYNC_LABEL: Record<SyncStatus, string> = {
   off: "未登入，進度只存在這部裝置",
@@ -58,15 +52,23 @@ export function NavBar({
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
         <Link
           to="/"
-          className="flex min-w-0 items-center gap-2 font-serif text-lg font-bold text-accent"
+          // 手機版只剩圖示，所以要自己撐出 44px 的觸控區；桌面版有文字，
+          // 靠文字本身就夠大，不需要這個下限。
+          className="-ml-2 flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-md font-serif text-lg font-bold text-accent sm:ml-0 sm:min-h-0 sm:min-w-0 sm:justify-start"
         >
           <BookOpen className="size-5 shrink-0" />
-          <span className="truncate">
+          {/*
+            390px 寬塞不下「7 個控制項 + 5 個字的站名 + 登入二字」。既然「登入」
+            要讓學生找得到，就讓站名在手機版明確退成書本圖示（仍然是回首頁的連結，
+            手機上很常見的做法），而不是靠 truncate 壓成 0 寬度的破版。
+          */}
+          <span className="hidden truncate sm:inline">
             範文十二式
             <span className="ml-2 align-middle rounded-full bg-seal/12 px-2 py-0.5 text-[10px] font-sans font-bold tracking-wide text-seal">
               水墨版
             </span>
           </span>
+          <span className="sr-only sm:hidden">範文十二式 首頁</span>
         </Link>
 
         <nav className="flex items-center gap-1 sm:gap-2">
@@ -109,7 +111,7 @@ export function NavBar({
             <Edit3 className="size-4" />
           </Link>
           {/* 角色入口。載入中先佔位，避免 header 抖動。 */}
-          <span className="inline-flex min-w-10 justify-center">
+          <span className="inline-flex justify-center lg:min-w-10">
             {profile ? (
               <Link
                 to={roleHome(profile.role)}
@@ -127,7 +129,7 @@ export function NavBar({
                 ) : (
                   <GraduationCap className="size-4" />
                 )}
-                <span className="hidden lg:inline">{HOME_LABEL[profile.role]}</span>
+                <span className="hidden lg:inline">{ROLE_HOME_LABELS[profile.role]}</span>
               </Link>
             ) : null}
           </span>

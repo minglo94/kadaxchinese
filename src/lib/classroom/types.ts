@@ -24,6 +24,13 @@ export function roleHome(role: Role): "/teacher" | "/me" | "/admin" {
   return "/me";
 }
 
+/** 落地頁的稱呼。導覽列與首頁入口共用，避免兩處寫法不一致。 */
+export const ROLE_HOME_LABELS: Record<Role, string> = {
+  teacher: "我的班房",
+  student: "我的進度",
+  admin: "全校總覽",
+};
+
 export type Profile = {
   userId: string;
   role: Role;

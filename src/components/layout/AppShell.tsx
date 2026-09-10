@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { TutorDock } from "@/components/ai/TutorDock";
 import { InkStage } from "@/components/ink/InkStage";
 import { NavBar } from "@/components/layout/NavBar";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProgressDialog } from "@/components/progress/ProgressDialog";
 import { useSessionBridge } from "@/components/sync/SessionBridge";
 import { loadProgress, type ProgressMap } from "@/lib/progress";
@@ -55,6 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           syncStatus={sync.status}
         />
         <main className="mx-auto max-w-5xl px-4 py-8 sm:px-8 sm:py-10 lg:px-6">{children}</main>
+        <SiteFooter />
       </div>
       <TutorDock />
       <ProgressDialog
