@@ -1,8 +1,6 @@
 import type { GameId } from "@/data/games";
-
-const KEY = "dse_game_scores_v1";
-
-export type ScoreBoard = Record<GameId, number>;
+import { SCORES_KEY, readLocal, writeLocal } from "@/lib/local-store";
+import { queueGameScore } from "@/lib/progress-sync";
 
 const EMPTY: ScoreBoard = {
   snake: 0,
@@ -12,15 +10,10 @@ const EMPTY: ScoreBoard = {
   hangman: 0,
 };
 
+export type ScoreBoard = Record<GameId, number>;
+
 function read(): ScoreBoard {
-  if (typeof window === "undefined") return { ...EMPTY };
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return { ...EMPTY };
-    return { ...EMPTY, ...(JSON.parse(raw) as Partial<ScoreBoard>) };
-  } catch {
-    return { ...EMPTY };
-  }
+  return { ...EMPTY, ...readLocal<Partial<ScoreBoard>>(SCORES_KEY, {}) };
 }
 
 export function loadScores(): ScoreBoard {
@@ -37,7 +30,10 @@ export function submitScore(id: GameId, score: number): { high: number; isNew: b
   const isNew = score > prev;
   if (isNew) {
     board[id] = score;
-    localStorage.setItem(KEY, JSON.stringify(board));
+    writeLocal(SCORES_KEY, board);
   }
+  // Queued on every run, not only on a new best: the server counts `plays`
+  // and the event stream feeds 反應速度 / 最近活動.
+  queueGameScore(id, score);
   return { high: Math.max(prev, score), isNew };
 }

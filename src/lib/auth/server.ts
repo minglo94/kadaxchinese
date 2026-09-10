@@ -1,8 +1,13 @@
 /**
  * Self-hosted Better Auth for THIS app (server-only).
  *
- * Pre-wired for live preview + deploy — do not rewrite this file. To enable
- * local email/password, flip the flag in `./email-password` only (see auth skill).
+ * Pre-wired for live preview + deploy — treat it as config, not a place to
+ * refactor. To enable local email/password, flip the flag in `./email-password`
+ * only (see auth skill).
+ *
+ * The one deliberate addition to the template: the self-hosted Google block
+ * below (`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`). It is additive — unset
+ * those two vars and every path behaves exactly as the template shipped.
  *
  * The app runs its own Better Auth at `/api/auth/*`, so the session cookie stays
  * on this app's own origin. Sign-in federates to the shared **Grok auth broker**
@@ -11,7 +16,12 @@
  * app only holds its own client id/secret and names the upstream it wants via
  * each provider's `idp` hint.
  *
- * Tri-mode:
+ * Modes:
+ *   - **Self-hosted Google** (`GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` set):
+ *     skips the broker and talks to Google directly with the operator's own
+ *     OAuth client. This is the only mode that works on a host the broker's
+ *     clients don't cover — Zeabur, Fly, a VPS. See `nativeGoogleConfigured`;
+ *     the client picks the flow via the `authMode` server function.
  *   - Deployed: the deployer injects a per-app `GROK_AUTH_*` + `BETTER_AUTH_URL`
  *     + `DATABASE_URL`, so real federated auth is persisted in Postgres.
  *   - Sandbox live preview: no injection -> falls back to the shared **preview
@@ -82,8 +92,29 @@ const grokClientId = env("GROK_AUTH_CLIENT_ID") ?? PREVIEW_CLIENT_ID;
 const grokClientSecret = env("GROK_AUTH_CLIENT_SECRET") ?? PREVIEW_CLIENT_SECRET;
 
 /** True when federated sign-in is active (real auth is enforced). */
-export const authConfigured =
-  !authDisabled && Boolean(grokClientId && grokClientSecret);
+export const authConfigured = !authDisabled && Boolean(grokClientId && grokClientSecret);
+
+// ── Self-hosted Google (for deploys outside the Grok platform) ──────────────
+// The broker path above only works on hosts its client accepts: a per-app
+// `GROK_AUTH_*` client (injected by the Grok deployer) or the shared preview
+// client, which is limited to `*.grok-sandbox.com` callbacks. On any other host
+// — Zeabur, Fly, a VPS — neither applies, so sign-in must go straight to Google
+// with the operator's OWN OAuth client instead of through the broker.
+//
+// Set both vars in the hosting provider's env, and add
+// `https://<your-host>/api/auth/callback/google` to the client's authorized
+// redirect URIs in the Google Cloud console. Leaving them unset keeps the
+// broker path exactly as before, so the Grok deploy is unaffected.
+const googleClientId = env("GOOGLE_CLIENT_ID");
+const googleClientSecret = env("GOOGLE_CLIENT_SECRET");
+
+/**
+ * True when this app talks to Google directly (its own OAuth client) rather
+ * than federating through the broker. Read by the client via the `authMode`
+ * server function, so the sign-in button can pick the right flow.
+ */
+export const nativeGoogleConfigured =
+  !authDisabled && Boolean(googleClientId && googleClientSecret);
 
 // This app's own Better Auth origin. When deployed the deployer injects the
 // public URL. In the sandbox live preview there's no fixed URL (each preview gets
@@ -197,6 +228,10 @@ export const auth = betterAuth({
       trustedProviders: [
         ...GROK_PROVIDERS.map((p) => p.providerId),
         GATE_PROVIDER_ID,
+        // Self-hosted Google (see `nativeGoogleConfigured`). Google verifies
+        // its own emails, so the same person signing in again links cleanly
+        // instead of failing with `account_not_linked`.
+        ...(nativeGoogleConfigured ? ["google"] : []),
       ],
       // X's synthetic email is never "verified", so don't gate linking on the
       // local user's email-verified state.
@@ -212,6 +247,24 @@ export const auth = betterAuth({
 
   // Local email/password — toggled only via `./email-password` (not a plugin).
   ...(emailAndPasswordEnabled ? { emailAndPassword: { enabled: true } } : {}),
+
+  // Direct Google, for hosts the broker's clients don't cover (see
+  // `nativeGoogleConfigured`). Better Auth mounts it at
+  // `/api/auth/callback/google`, which the existing `/api/auth/$` catch-all
+  // already serves — no new route. `prompt: "select_account"` gives the account
+  // chooser every time, matching what the broker path does, so a shared school
+  // computer never silently reuses the previous student's Google session.
+  ...(nativeGoogleConfigured
+    ? {
+        socialProviders: {
+          google: {
+            clientId: googleClientId as string,
+            clientSecret: googleClientSecret as string,
+            prompt: "select_account" as const,
+          },
+        },
+      }
+    : {}),
 
   // `__Host-` prefixed cookies: the browser REFUSES any same-named cookie that
   // carries a `Domain` attribute, so a sibling `*.grok.me` app cannot "toss" a

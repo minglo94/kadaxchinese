@@ -10,9 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as DictationRouteImport } from './routes/dictation'
 import { Route as GamesRouteImport } from './routes/games'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as MeRouteImport } from './routes/me'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as QuizRouteImport } from './routes/quiz'
+import { Route as TeacherRouteImport } from './routes/teacher'
 import { Route as GamesIndexRouteImport } from './routes/games.index'
 import { Route as GamesHangmanRouteImport } from './routes/games.hangman'
 import { Route as GamesMatchRouteImport } from './routes/games.match'
@@ -20,10 +25,19 @@ import { Route as GamesSnakeRouteImport } from './routes/games.snake'
 import { Route as GamesSortRouteImport } from './routes/games.sort'
 import { Route as GamesTimeRouteImport } from './routes/games.time'
 import { Route as ReadIdRouteImport } from './routes/read.$id'
+import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as TeacherClassClassIdRouteImport } from './routes/teacher.class.$classId'
+import { Route as TeacherClassClassIdStudentStudentIdRouteImport } from './routes/teacher.class.$classId.student.$studentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DictationRoute = DictationRouteImport.update({
@@ -36,9 +50,29 @@ const GamesRoute = GamesRouteImport.update({
   path: '/games',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuizRoute = QuizRouteImport.update({
   id: '/quiz',
   path: '/quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherRoute = TeacherRouteImport.update({
+  id: '/teacher',
+  path: '/teacher',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GamesIndexRoute = GamesIndexRouteImport.update({
@@ -76,12 +110,38 @@ const ReadIdRoute = ReadIdRouteImport.update({
   path: '/read/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeacherIndexRoute = TeacherIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherClassClassIdRoute = TeacherClassClassIdRouteImport.update({
+  id: '/class/$classId',
+  path: '/class/$classId',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherClassClassIdStudentStudentIdRoute =
+  TeacherClassClassIdStudentStudentIdRouteImport.update({
+    id: '/student/$studentId',
+    path: '/student/$studentId',
+    getParentRoute: () => TeacherClassClassIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/dictation': typeof DictationRoute
   '/games': typeof GamesRouteWithChildren
+  '/login': typeof LoginRoute
+  '/me': typeof MeRoute
+  '/onboarding': typeof OnboardingRoute
   '/quiz': typeof QuizRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/games/hangman': typeof GamesHangmanRoute
   '/games/match': typeof GamesMatchRoute
   '/games/snake': typeof GamesSnakeRoute
@@ -89,10 +149,18 @@ export interface FileRoutesByFullPath {
   '/games/time': typeof GamesTimeRoute
   '/read/$id': typeof ReadIdRoute
   '/games/': typeof GamesIndexRoute
+  '/teacher/': typeof TeacherIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/teacher/class/$classId': typeof TeacherClassClassIdRouteWithChildren
+  '/teacher/class/$classId/student/$studentId': typeof TeacherClassClassIdStudentStudentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/dictation': typeof DictationRoute
+  '/login': typeof LoginRoute
+  '/me': typeof MeRoute
+  '/onboarding': typeof OnboardingRoute
   '/quiz': typeof QuizRoute
   '/games/hangman': typeof GamesHangmanRoute
   '/games/match': typeof GamesMatchRoute
@@ -101,13 +169,22 @@ export interface FileRoutesByTo {
   '/games/time': typeof GamesTimeRoute
   '/read/$id': typeof ReadIdRoute
   '/games': typeof GamesIndexRoute
+  '/teacher': typeof TeacherIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/teacher/class/$classId': typeof TeacherClassClassIdRouteWithChildren
+  '/teacher/class/$classId/student/$studentId': typeof TeacherClassClassIdStudentStudentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/dictation': typeof DictationRoute
   '/games': typeof GamesRouteWithChildren
+  '/login': typeof LoginRoute
+  '/me': typeof MeRoute
+  '/onboarding': typeof OnboardingRoute
   '/quiz': typeof QuizRoute
+  '/teacher': typeof TeacherRouteWithChildren
   '/games/hangman': typeof GamesHangmanRoute
   '/games/match': typeof GamesMatchRoute
   '/games/snake': typeof GamesSnakeRoute
@@ -115,14 +192,23 @@ export interface FileRoutesById {
   '/games/time': typeof GamesTimeRoute
   '/read/$id': typeof ReadIdRoute
   '/games/': typeof GamesIndexRoute
+  '/teacher/': typeof TeacherIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/teacher/class/$classId': typeof TeacherClassClassIdRouteWithChildren
+  '/teacher/class/$classId/student/$studentId': typeof TeacherClassClassIdStudentStudentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/dictation'
     | '/games'
+    | '/login'
+    | '/me'
+    | '/onboarding'
     | '/quiz'
+    | '/teacher'
     | '/games/hangman'
     | '/games/match'
     | '/games/snake'
@@ -130,10 +216,18 @@ export interface FileRouteTypes {
     | '/games/time'
     | '/read/$id'
     | '/games/'
+    | '/teacher/'
+    | '/api/auth/$'
+    | '/teacher/class/$classId'
+    | '/teacher/class/$classId/student/$studentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/dictation'
+    | '/login'
+    | '/me'
+    | '/onboarding'
     | '/quiz'
     | '/games/hangman'
     | '/games/match'
@@ -142,12 +236,21 @@ export interface FileRouteTypes {
     | '/games/time'
     | '/read/$id'
     | '/games'
+    | '/teacher'
+    | '/api/auth/$'
+    | '/teacher/class/$classId'
+    | '/teacher/class/$classId/student/$studentId'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/dictation'
     | '/games'
+    | '/login'
+    | '/me'
+    | '/onboarding'
     | '/quiz'
+    | '/teacher'
     | '/games/hangman'
     | '/games/match'
     | '/games/snake'
@@ -155,14 +258,24 @@ export interface FileRouteTypes {
     | '/games/time'
     | '/read/$id'
     | '/games/'
+    | '/teacher/'
+    | '/api/auth/$'
+    | '/teacher/class/$classId'
+    | '/teacher/class/$classId/student/$studentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   DictationRoute: typeof DictationRoute
   GamesRoute: typeof GamesRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  MeRoute: typeof MeRoute
+  OnboardingRoute: typeof OnboardingRoute
   QuizRoute: typeof QuizRoute
+  TeacherRoute: typeof TeacherRouteWithChildren
   ReadIdRoute: typeof ReadIdRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +285,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dictation': {
@@ -188,11 +308,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GamesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quiz': {
       id: '/quiz'
       path: '/quiz'
       fullPath: '/quiz'
       preLoaderRoute: typeof QuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher': {
+      id: '/teacher'
+      path: '/teacher'
+      fullPath: '/teacher'
+      preLoaderRoute: typeof TeacherRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/games/': {
@@ -244,6 +392,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReadIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher/': {
+      id: '/teacher/'
+      path: '/'
+      fullPath: '/teacher/'
+      preLoaderRoute: typeof TeacherIndexRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/class/$classId': {
+      id: '/teacher/class/$classId'
+      path: '/class/$classId'
+      fullPath: '/teacher/class/$classId'
+      preLoaderRoute: typeof TeacherClassClassIdRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/class/$classId/student/$studentId': {
+      id: '/teacher/class/$classId/student/$studentId'
+      path: '/student/$studentId'
+      fullPath: '/teacher/class/$classId/student/$studentId'
+      preLoaderRoute: typeof TeacherClassClassIdStudentStudentIdRouteImport
+      parentRoute: typeof TeacherClassClassIdRoute
+    }
   }
 }
 
@@ -267,12 +443,43 @@ const GamesRouteChildren: GamesRouteChildren = {
 
 const GamesRouteWithChildren = GamesRoute._addFileChildren(GamesRouteChildren)
 
+interface TeacherClassClassIdRouteChildren {
+  TeacherClassClassIdStudentStudentIdRoute: typeof TeacherClassClassIdStudentStudentIdRoute
+}
+
+const TeacherClassClassIdRouteChildren: TeacherClassClassIdRouteChildren = {
+  TeacherClassClassIdStudentStudentIdRoute:
+    TeacherClassClassIdStudentStudentIdRoute,
+}
+
+const TeacherClassClassIdRouteWithChildren =
+  TeacherClassClassIdRoute._addFileChildren(TeacherClassClassIdRouteChildren)
+
+interface TeacherRouteChildren {
+  TeacherIndexRoute: typeof TeacherIndexRoute
+  TeacherClassClassIdRoute: typeof TeacherClassClassIdRouteWithChildren
+}
+
+const TeacherRouteChildren: TeacherRouteChildren = {
+  TeacherIndexRoute: TeacherIndexRoute,
+  TeacherClassClassIdRoute: TeacherClassClassIdRouteWithChildren,
+}
+
+const TeacherRouteWithChildren =
+  TeacherRoute._addFileChildren(TeacherRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   DictationRoute: DictationRoute,
   GamesRoute: GamesRouteWithChildren,
+  LoginRoute: LoginRoute,
+  MeRoute: MeRoute,
+  OnboardingRoute: OnboardingRoute,
   QuizRoute: QuizRoute,
+  TeacherRoute: TeacherRouteWithChildren,
   ReadIdRoute: ReadIdRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

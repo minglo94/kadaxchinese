@@ -8,6 +8,7 @@ export const AI_TOKENS = {
   explain: 900,
   grade: 800,
   quiz: 2800,
+  advice: 900,
 } as const;
 
 const TITLES = articles.map((item) => item.title).join("、");
@@ -45,7 +46,9 @@ export function articleContext(articleId?: string): string {
 }
 
 function articleByTitle(title: string): Article | undefined {
-  return articles.find((item) => item.title === title || title.includes(item.title.replace(/[《》]/g, "")));
+  return articles.find(
+    (item) => item.title === title || title.includes(item.title.replace(/[《》]/g, "")),
+  );
 }
 
 export function tutorMessages(
@@ -257,13 +260,147 @@ export function parseGeneratedQuiz(
     const parsed = JSON.parse(repaired) as unknown;
     const rows = Array.isArray(parsed)
       ? parsed
-      : parsed && typeof parsed === "object" && Array.isArray((parsed as { questions?: unknown }).questions)
+      : parsed &&
+          typeof parsed === "object" &&
+          Array.isArray((parsed as { questions?: unknown }).questions)
         ? (parsed as { questions: unknown[] }).questions
         : [parsed];
-    const questions = rows.map(asQuestion).filter((item): item is QuizItem => Boolean(item)).slice(0, 6);
+    const questions = rows
+      .map(asQuestion)
+      .filter((item): item is QuizItem => Boolean(item))
+      .slice(0, 6);
     if (questions.length < 4) return { ok: false, error: "AI 出題數量不足，請再試一次。" };
     return { ok: true, questions };
   } catch {
     return { ok: false, error: "無法解析 AI 出題結果，請再試一次。" };
   }
+}
+
+/* ------------------------------------------------------- 個人／全班學習建議 */
+
+export type AdviceStats = {
+  audience: "student" | "teacher";
+  learnerName: string | null;
+  completion: { startedArticles: number; totalArticles: number; percent: number };
+  overallPercent: number;
+  dimensions: Array<{ label: string; value: number; sample: number; confident: boolean }>;
+  weakArticles: Array<{ title: string; percent: number }>;
+  strongArticles: Array<{ title: string; percent: number }>;
+};
+
+function statsBlock(stats: AdviceStats): string {
+  const dims = stats.dimensions
+    .map((d) => (d.confident ? `${d.label} ${d.value}%（${d.sample} 題）` : `${d.label} 資料不足`))
+    .join("；");
+  return [
+    `已開始的範文：${stats.completion.startedArticles} / ${stats.completion.totalArticles} 篇`,
+    `題目覆蓋率：${stats.completion.percent}%`,
+    `整體答對率：${stats.overallPercent}%`,
+    `各項能力：${dims}`,
+    stats.weakArticles.length > 0
+      ? `最弱的範文：${stats.weakArticles.map((a) => `${a.title} ${a.percent}%`).join("、")}`
+      : "最弱的範文：資料不足",
+    stats.strongArticles.length > 0
+      ? `較強的範文：${stats.strongArticles.map((a) => `${a.title} ${a.percent}%`).join("、")}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+const APP_FEATURES = [
+  "可用的練習：每篇範文的原文與詞解、深度測驗（選擇題）、默書練習（填空）",
+  "趣味闖關：詞解貪食蛇（字詞）、限時生存戰（刷題）、字義翻牌（配對記憶）、課文重組（脈絡）、名句填字謎（默寫）",
+].join("\n");
+
+/** 學生自己看的建議：第二人稱、鼓勵、3 至 5 個具體下一步。 */
+export function adviceMessages(stats: AdviceStats): ChatMessage[] {
+  const who = stats.learnerName ? `${stats.learnerName}同學` : "這位同學";
+  return [
+    {
+      role: "system",
+      content: [
+        "你是香港中學中文科老師，正在為一位學生寫個人溫習建議。",
+        STYLE_RULES,
+        "用第二人稱「你」，語氣具體、鼓勵、不說教。",
+        "先用一句話總結目前狀態，然後給 3 至 5 個具體下一步。",
+        "每個下一步都要指名真實的範文標題或真實的練習名稱，不要泛泛而談。",
+        "資料不足的能力維度不要下判斷，改為建議先做哪一種練習來補資料。",
+        "全部控制在 250 字以內。",
+        `指定範文目錄：${TITLES}`,
+        APP_FEATURES,
+      ].join("\n"),
+    },
+    { role: "user", content: `${who}的學習數據：\n${statsBlock(stats)}\n\n請寫個人溫習建議。` },
+  ];
+}
+
+/** 老師看的個別學生建議：下一課該操練甚麼。 */
+export function teacherAdviceMessages(stats: AdviceStats): ChatMessage[] {
+  const who = stats.learnerName ?? "該學生";
+  return [
+    {
+      role: "system",
+      content: [
+        "你是香港中學中文科科主任，正在為前線老師寫一段學生診斷。",
+        STYLE_RULES,
+        "對象是老師，不是學生：寫「這名學生的弱項是甚麼」以及「下一課可以操練甚麼」。",
+        "先一句診斷，然後 3 至 4 個可以在課堂上做的具體動作，指名真實範文標題。",
+        "資料不足的維度要明確說「數據不足，建議先讓他做某種練習」。",
+        "全部控制在 250 字以內。",
+        `指定範文目錄：${TITLES}`,
+        APP_FEATURES,
+      ].join("\n"),
+    },
+    {
+      role: "user",
+      content: `${who}的學習數據：\n${statsBlock(stats)}\n\n請寫學生診斷與課堂建議。`,
+    },
+  ];
+}
+
+/** 全班建議：整班的共同弱項與教學重點。 */
+export function classAdviceMessages(input: {
+  className: string;
+  studentCount: number;
+  dimensions: AdviceStats["dimensions"];
+  weakArticles: AdviceStats["weakArticles"];
+  strugglingStudents: Array<{ name: string; percent: number }>;
+}): ChatMessage[] {
+  const dims = input.dimensions
+    .map((d) => (d.confident ? `${d.label} ${d.value}%` : `${d.label} 資料不足`))
+    .join("；");
+  const weak =
+    input.weakArticles.length > 0
+      ? input.weakArticles.map((a) => `${a.title} ${a.percent}%`).join("、")
+      : "資料不足";
+  const struggling =
+    input.strugglingStudents.length > 0
+      ? input.strugglingStudents.map((s) => `${s.name} ${s.percent}%`).join("、")
+      : "暫無明顯落後的學生";
+  return [
+    {
+      role: "system",
+      content: [
+        "你是香港中學中文科科主任，正在為一個班別寫教學建議。",
+        STYLE_RULES,
+        "先一句總結全班狀況，然後 3 至 4 個具體教學動作（指名真實範文標題與練習名稱）。",
+        "最後一句提醒需要個別跟進的學生（如果有）。",
+        "全部控制在 250 字以內。",
+        `指定範文目錄：${TITLES}`,
+        APP_FEATURES,
+      ].join("\n"),
+    },
+    {
+      role: "user",
+      content: [
+        `班別：${input.className}（${input.studentCount} 人）`,
+        `全班平均能力：${dims}`,
+        `全班最弱的範文：${weak}`,
+        `需要留意的學生：${struggling}`,
+        "",
+        "請寫全班教學建議。",
+      ].join("\n"),
+    },
+  ];
 }
