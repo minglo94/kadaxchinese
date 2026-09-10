@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Apple, ArrowRight, Layers, ListOrdered, PenLine, Sparkles, Timer } from "lucide-react";
 import { useMemo, useState } from "react";
+import { HeroAuthCta } from "@/components/home/HeroAuthCta";
 import { articles, categories } from "@/data/articles";
 import { GAME_META, type GameId } from "@/data/games";
 import { cn } from "@/lib/utils";
@@ -26,10 +27,13 @@ export function HomePage() {
         <p className="text-xs font-bold tracking-[0.28em] text-accent">HKDSE 中文科指定範文</p>
         <h1 className="mt-3 font-serif text-3xl font-extrabold leading-tight text-ink sm:text-5xl">
           十二篇範文
-          <span className="mt-2 block text-2xl font-bold text-accent sm:text-3xl">宣紙上的溫習書齋</span>
+          <span className="mt-2 block text-2xl font-bold text-accent sm:text-3xl">
+            宣紙上的溫習書齋
+          </span>
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-ink-soft sm:text-base">
-          完整原文、必考詞解、閃卡與仿真測驗、名句默書。現加趣味闖關與 AI 助教：吃錯詞義會扣心，答錯選擇題可即時解析。
+          完整原文、必考詞解、閃卡與仿真測驗、名句默書。現加趣味闖關與 AI
+          助教：吃錯詞義會扣心，答錯選擇題可即時解析。
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
@@ -44,7 +48,11 @@ export function HomePage() {
           >
             先做測驗
           </Link>
+          <HeroAuthCta />
         </div>
+        <p className="mt-3 text-xs leading-relaxed text-muted">
+          登入後成績會存到帳戶，換手機、換電腦都接得上；老師可以開班房查看全班進度。
+        </p>
       </section>
 
       <section className="space-y-4">
@@ -77,7 +85,8 @@ export function HomePage() {
         <div>
           <h2 className="font-serif text-lg font-bold">AI 書齋助教</h2>
           <p className="mt-1 text-sm leading-relaxed text-ink-soft">
-            右下角隨時提問語譯與手法。公開網站請在助教齒輪圖示貼上免費 Gemini API 金鑰；測驗答錯可生成解析，默書可彈性評分，亦可按篇章出新題。
+            右下角隨時提問語譯與手法。公開網站請在助教齒輪圖示貼上免費 Gemini API
+            金鑰；測驗答錯可生成解析，默書可彈性評分，亦可按篇章出新題。
           </p>
         </div>
       </section>
@@ -90,7 +99,9 @@ export function HomePage() {
             onClick={() => setCat(item)}
             className={cn(
               "h-10 rounded-full px-4 text-sm font-medium transition-colors duration-150",
-              cat === item ? "bg-ink text-paper" : "border border-line bg-paper-card text-ink-soft hover:text-ink",
+              cat === item
+                ? "bg-ink text-paper"
+                : "border border-line bg-paper-card text-ink-soft hover:text-ink",
             )}
           >
             {item}

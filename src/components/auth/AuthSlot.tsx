@@ -48,10 +48,11 @@ export function AuthSlot() {
     return (
       <Link
         to="/login"
-        className="inline-flex h-9 items-center gap-1.5 rounded-[10px] border border-line px-2.5 text-sm font-medium text-ink hover:bg-paper-deep sm:px-3"
+        className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-line px-2.5 text-sm font-medium text-ink hover:bg-paper-deep sm:px-3"
       >
-        <LogIn className="size-4 text-accent" />
-        <span className="hidden sm:inline">登入</span>
+        <LogIn className="size-4 shrink-0 text-accent" />
+        {/* 文字在手機版也要顯示 —— 只有一個箭頭圖示時，學生找不到登入在哪。 */}
+        登入
       </Link>
     );
   }
