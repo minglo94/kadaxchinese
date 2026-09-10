@@ -1,3 +1,5 @@
 node_modules/
 # TanStack Start dev cache
 .tanstack/
+# Nitro build output for non-default presets (see NITRO_PRESET in vite.config.ts)
+.zeabur/

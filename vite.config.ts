@@ -170,7 +170,12 @@ export default defineConfig(({ command, isPreview }) => ({
     ...(command === "build" || isPreview
       ? [
           nitro({
-            preset: "vercel",
+            // Deploy target. Defaults to `vercel` so the Grok deployer's build
+            // is unchanged; set `NITRO_PRESET` in the hosting provider's build
+            // env to target another platform (e.g. `zeabur`, whose preset
+            // writes `.zeabur/output/` — the layout Zeabur auto-detects, so no
+            // start command is needed there). `npx nitro presets` lists them.
+            preset: process.env.NITRO_PRESET ?? "vercel",
             // Auto-registers server/middleware/* (the PWA install page +
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.

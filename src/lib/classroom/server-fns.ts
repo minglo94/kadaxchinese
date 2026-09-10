@@ -15,10 +15,12 @@
  *   5. 學習報告（個人、班房、學生）
  *   6. AI 學習建議（授權 → 伺服器算 stats → 指紋快取 → 頻率上限）
  *   7. 全校總覽（科主任唯讀）
+ *   8. 登入模式（唯一一個公開的 —— 登入頁在未登入時就要問）
  *
- * 共同規則：每個 server function 都掛 `authMiddleware`，所有 query 都以驗證過
- * 的 `context.userId` 收斂；授權判斷全部委派 `guards.server.ts`；時間一律以毫秒
- * 整數回傳（`src/lib/db.ts` 不 normalize timestamptz）。
+ * 共同規則：除了 `authMode`，每個 server function 都掛 `authMiddleware`，
+ * 所有 query 都以驗證過的 `context.userId` 收斂；授權判斷全部委派
+ * `guards.server.ts`；時間一律以毫秒整數回傳
+ * （`src/lib/db.ts` 不 normalize timestamptz）。
  *
  * 所有 server-only 依賴都用**寫在呼叫點上**的 dynamic import：這個模組會被客戶端
  * import，靜態 `import "@/lib/db"` 會把 `pg` 與 PGLite WASM 拉進瀏覽器 bundle；
@@ -95,23 +97,6 @@ function cleanClassroomId(raw: unknown): number {
 }
 
 /* ==================== 身分、班房、名單、入班 ==================== */
-
-/**
- * Server-only dependencies are pulled in DYNAMICALLY, inside handlers.
- *
- * This module is imported by client code (`profile-store.ts`), and a top-level
- * `import "@/lib/db"` would drag `pg` plus the PGLite WASM bundle into the
- * browser graph. Same reasoning as `src/lib/auth/middleware.ts`.
- */
-/**
- * Server-only dependencies are pulled in DYNAMICALLY, inside each wrapper.
- *
- * The import MUST be written inline at the call site. Holding the module
- * namespace in a variable (`const guards = () => import("./guards.server")`)
- * makes the production SSR bundle emit a namespace object it never defines —
- * the built server then dies with "Export 'ssr_exports' is not defined in
- * module" while `vite dev` looks perfectly fine.
- */
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -1265,3 +1250,25 @@ export const schoolOverview = createServerFn({ method: "GET" })
       attention,
     };
   });
+
+/* ==================== 登入模式 ==================== */
+
+/**
+ * 這個 app 的 Google 登入走哪一條路。
+ *
+ * `"native-google"` = 用營運者自己的 Google OAuth client 直連 Google
+ * （設了 `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`，Zeabur 等自架環境）。
+ * `"broker"` = 聯邦到 Grok 的 auth broker（Grok 平台上的預設）。
+ *
+ * **刻意不掛 `authMiddleware`** —— 登入頁在還沒有 session 的時候就要問這件事。
+ * 回傳的只有「哪一種登入流程」，沒有任何機密：client id / secret 都留在伺服器。
+ *
+ * 為甚麼放在這個檔案：見檔頭。第三個 server-fn 模組會再次觸發那個 SSR 拆分缺陷，
+ * 所以新的 server function 一律加在這裡。
+ */
+export const authMode = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ mode: "native-google" | "broker" }> => {
+    const { nativeGoogleConfigured } = await import("@/lib/auth/server");
+    return { mode: nativeGoogleConfigured ? "native-google" : "broker" };
+  },
+);

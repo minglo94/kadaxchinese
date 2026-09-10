@@ -1,9 +1,11 @@
 import { Navigate } from "@tanstack/react-router";
 import { BookOpen, GraduationCap, LineChart, Loader2, Users } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GROK_PROVIDERS, authEnabled, signIn } from "@/lib/auth/client";
+import { signInWithGoogleDirect } from "@/lib/auth/native-google";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
+import { authMode } from "@/lib/classroom/server-fns";
 import { useHydrated } from "@/lib/use-hydrated";
 import { cn } from "@/lib/utils";
 
@@ -33,18 +35,34 @@ export function LoginPage() {
   const hydrated = useHydrated();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Which Google flow the server is configured for. Undefined = still asking;
+  // a failed request falls back to "broker", the pre-existing behaviour.
+  const [mode, setMode] = useState<"native-google" | "broker" | undefined>();
+
+  useEffect(() => {
+    authMode()
+      .then((result) => setMode(result.mode))
+      .catch(() => setMode("broker"));
+  }, []);
 
   // Already signed in — no reason to show the door again. Gated on `hydrated`
   // so the server and the first client render agree (no hydration mismatch).
   if (hydrated && user) return <Navigate to={AFTER_SIGN_IN} />;
 
   const google = GROK_PROVIDERS.find((p) => p.providerId === "grok-google");
-  const others = GROK_PROVIDERS.filter((p) => p.providerId !== "grok-google");
+  // Self-hosted Google means the broker isn't reachable for THIS host, so the
+  // broker-only providers (X) would just fail — don't offer them.
+  const others =
+    mode === "native-google" ? [] : GROK_PROVIDERS.filter((p) => p.providerId !== "grok-google");
 
   const start = (providerId: string) => {
     setError(null);
     setBusy(providerId);
-    void signIn(providerId, { callbackURL: AFTER_SIGN_IN }).catch(() => {
+    const flow =
+      providerId === "grok-google" && mode === "native-google"
+        ? signInWithGoogleDirect({ callbackURL: AFTER_SIGN_IN })
+        : signIn(providerId, { callbackURL: AFTER_SIGN_IN });
+    void flow.catch(() => {
       setBusy(null);
       setError("登入未能完成，請再試一次。");
     });
@@ -96,7 +114,9 @@ export function LoginPage() {
               <Button
                 size="lg"
                 className="w-full"
-                disabled={busy !== null || !hydrated}
+                // `mode === undefined` means we don't yet know which Google
+                // flow to start — clicking early would pick the wrong one.
+                disabled={busy !== null || !hydrated || mode === undefined}
                 onClick={() => start(google.providerId)}
               >
                 {busy === google.providerId ? (
